@@ -1,11 +1,15 @@
 <?php
 
 namespace App\Payments;
+
 use App\Exceptions\ApiException;
 
 
-class BTCPay {
-    public function __construct($config) {
+class BTCPay
+{
+    protected $config;
+    public function __construct($config)
+    {
         $this->config = $config;
     }
 
@@ -35,7 +39,8 @@ class BTCPay {
         ];
     }
 
-    public function pay($order) {
+    public function pay($order)
+    {
 
         $params = [
             'jsonResponse' => true,
@@ -52,7 +57,7 @@ class BTCPay {
 
         $ret = @json_decode($ret_raw, true);
 
-        if(empty($ret['checkoutLink'])) {
+        if (empty($ret['checkoutLink'])) {
             throw new ApiException("error!");
         }
         return [
@@ -61,7 +66,8 @@ class BTCPay {
         ];
     }
 
-    public function notify($params) {
+    public function notify($params)
+    {
         $payload = trim(get_request_content());
 
         $headers = getallheaders();
@@ -70,14 +76,13 @@ class BTCPay {
         //NOT BTCPay-Sig
         //API doc is WRONG!
         $headerName = 'Btcpay-Sig';
-        $signraturHeader = isset($headers[$headerName]) ? $headers[$headerName] : '';
+        $signatureHeader = isset($headers[$headerName]) ? $headers[$headerName] : '';
         $json_param = json_decode($payload, true);
 
         $computedSignature = "sha256=" . \hash_hmac('sha256', $payload, $this->config['btcpay_webhook_key']);
 
-        if (!self::hashEqual($signraturHeader, $computedSignature)) {
-            throw new ApiException('HMAC signature does not match',400);
-            return false;
+        if (!self::hashEqual($signatureHeader, $computedSignature)) {
+            throw new ApiException('HMAC signature does not match', 400);
         }
 
         //get order id store in metadata
@@ -93,16 +98,16 @@ class BTCPay {
 
 
         $out_trade_no = $invoiceDetail['metadata']["orderId"];
-        $pay_trade_no=$json_param['invoiceId'];
+        $pay_trade_no = $json_param['invoiceId'];
         return [
             'trade_no' => $out_trade_no,
             'callback_no' => $pay_trade_no
         ];
-
     }
 
 
-    private function _curlPost($url,$params=false){
+    private function _curlPost($url, $params = false)
+    {
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -111,7 +116,9 @@ class BTCPay {
         curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         curl_setopt(
-            $ch, CURLOPT_HTTPHEADER, array('Authorization:' .'token '.$this->config['btcpay_api_key'], 'Content-Type: application/json')
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array('Authorization:' . 'token ' . $this->config['btcpay_api_key'], 'Content-Type: application/json')
         );
         $result = curl_exec($ch);
         curl_close($ch);
@@ -143,6 +150,4 @@ class BTCPay {
             return !$ret;
         }
     }
-
 }
-

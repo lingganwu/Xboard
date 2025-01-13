@@ -1,5 +1,7 @@
 ## aapanel部署指南
-> 本文将教你如何使用aapanel进行部署
+> 本文将教你如何使用aapanel进行部署  
+
+<span style="color:red">⚠️：Centos7有部分反馈部署失败，请尽量避免使用Centos7进行部署</span> 
 ### 安装
 1. 安装aaPanel 
 
@@ -21,6 +23,7 @@ URL=https://www.aapanel.com/script/install_6.0_en.sh && if [ -f /usr/bin/curl ];
 - swoole4
 - readline
 - event
+- inotify (可选，热重载依赖)
 
 4. 解除被禁止函数
 > aaPanel 面板 > App Store > 找到PHP 8.1点击Setting > Disabled functions 将以下函数从列表中删除
@@ -41,7 +44,7 @@ URL=https://www.aapanel.com/script/install_6.0_en.sh && if [ -f /usr/bin/curl ];
 ```
 # 删除目录下文件
 chattr -i .user.ini
-rm -rf .htaccess 404.html index.html .user.ini
+rm -rf .htaccess 404.html 502.html index.html .user.ini
 ```
 > 执行命令从 Github 克隆到当前目录。
 ```

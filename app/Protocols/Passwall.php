@@ -29,10 +29,13 @@ class Passwall
                 $uri .= self::buildVless($user['uuid'], $item);
             }
             if ($item['type'] === 'shadowsocks') {
-                $uri .= self::buildShadowsocks($user['uuid'], $item);
+                $uri .= self::buildShadowsocks($item['password'], $item);
             }
             if ($item['type'] === 'trojan') {
                 $uri .= self::buildTrojan($user['uuid'], $item);
+            }
+            if ($item['type'] === 'hysteria') {
+                $uri .= General::buildHysteria($user['uuid'], $item);
             }
         }
         return base64_encode($uri);

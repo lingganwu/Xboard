@@ -13,7 +13,7 @@ class StatController extends Controller
 {
     public function getTrafficLog(Request $request)
     {
-        $startDate = now()->startOfMonth();
+        $startDate = now()->startOfMonth()->timestamp;
         $records = StatUser::query()
             ->where('user_id', $request->user['id'])
             ->where('record_at', '>=', $startDate)
@@ -24,7 +24,6 @@ class StatController extends Controller
         $recordAt = strtotime(date('Y-m-d'));
         $statService = new StatisticalService();
         $statService->setStartAt($recordAt);
-        $statService->setUserStats();
         $todayTraffics = $statService->getStatUserByUserID($request->user['id']);
         if (count($todayTraffics) > 0) {
             $todayTraffics = collect($todayTraffics)->map(function ($todayTraffic) {

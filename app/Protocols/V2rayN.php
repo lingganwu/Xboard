@@ -31,13 +31,13 @@ class V2rayN
                 $uri .= self::buildVless($user['uuid'], $item);
             }
             if ($item['type'] === 'shadowsocks') {
-                $uri .= self::buildShadowsocks($user['uuid'], $item);
+                $uri .= self::buildShadowsocks($item['password'], $item);
             }
             if ($item['type'] === 'trojan') {
                 $uri .= self::buildTrojan($user['uuid'], $item);
             }
             if ($item['type'] === 'hysteria') {
-                $uri .= self::buildHysteria($user['uuid'], $item);
+                $uri .= General::buildHysteria($user['uuid'], $item);
             }
 
         }
@@ -46,16 +46,6 @@ class V2rayN
 
     public static function buildShadowsocks($password, $server)
     {
-        if ($server['cipher'] === '2022-blake3-aes-128-gcm') {
-            $serverKey = Helper::getServerKey($server['created_at'], 16);
-            $userKey = Helper::uuidToBase64($password, 16);
-            $password = "{$serverKey}:{$userKey}";
-        }
-        if ($server['cipher'] === '2022-blake3-aes-256-gcm') {
-            $serverKey = Helper::getServerKey($server['created_at'], 32);
-            $userKey = Helper::uuidToBase64($password, 32);
-            $password = "{$serverKey}:{$userKey}";
-        }
         $name = rawurlencode($server['name']);
         $str = str_replace(
             ['+', '/', '='],
@@ -202,21 +192,5 @@ class V2rayN
         return $uri;
     }
 
-    public static function buildHysteria($password, $server)
-    {
-        $name = rawurlencode($server['name']);
-        $params = [];
-        if ($server['server_name']) $params['sni'] = $server['server_name'];
-        $params['insecure'] = $server['insecure'] ? 1 : 0;
-        $query = http_build_query($params);
-        if ($server['version'] == 2) {
-            $uri = "hysteria2://{$password}@{$server['host']}:{$server['port']}?{$query}#{$name}";
-            $uri .= "\r\n";
-        } else {
-            // V2rayN似乎不支持v1, 返回空
-            $uri = "";
-        }
-        return $uri;
-    }
 
 }

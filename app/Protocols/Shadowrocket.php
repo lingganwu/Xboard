@@ -31,7 +31,7 @@ class Shadowrocket
         $uri .= "STATUS=🚀↑:{$upload}GB,↓:{$download}GB,TOT:{$totalTraffic}GB💡Expires:{$expiredDate}\r\n";
         foreach ($servers as $item) {
             if ($item['type'] === 'shadowsocks') {
-                $uri .= self::buildShadowsocks($user['uuid'], $item);
+                $uri .= self::buildShadowsocks($item['password'], $item);
             }
             if ($item['type'] === 'vmess') {
                 $uri .= self::buildVmess($user['uuid'], $item);
@@ -52,23 +52,17 @@ class Shadowrocket
 
     public static function buildShadowsocks($password, $server)
     {
-        if ($server['cipher'] === '2022-blake3-aes-128-gcm') {
-            $serverKey = Helper::getServerKey($server['created_at'], 16);
-            $userKey = Helper::uuidToBase64($password, 16);
-            $password = "{$serverKey}:{$userKey}";
-        }
-        if ($server['cipher'] === '2022-blake3-aes-256-gcm') {
-            $serverKey = Helper::getServerKey($server['created_at'], 32);
-            $userKey = Helper::uuidToBase64($password, 32);
-            $password = "{$serverKey}:{$userKey}";
-        }
         $name = rawurlencode($server['name']);
         $str = str_replace(
             ['+', '/', '='],
             ['-', '_', ''],
             base64_encode("{$server['cipher']}:{$password}")
         );
-        return "ss://{$str}@{$server['host']}:{$server['port']}#{$name}\r\n";
+        $uri = "ss://{$str}@{$server['host']}:{$server['port']}";
+        if ($server['obfs'] == 'http') {
+            $uri .= "?plugin=obfs-local;obfs=http;obfs-host={$server['obfs-host']};obfs-uri={$server['obfs-path']}";
+        }
+        return $uri."#{$name}\r\n";
     }
 
     public static function buildVmess($uuid, $server)
@@ -272,6 +266,7 @@ class Shadowrocket
                     $params["obfsParam"] =$server['server_key'];
                 }
                 if($server['insecure']) $params['insecure'] = $server['insecure'];
+                if(isset($server['ports'])) $params['mport'] = $server['ports'];
                 $query = http_build_query($params);
                 $uri = "hysteria://{$server['host']}:{$server['port']}?{$query}#{$server['name']}";
                 $uri .= "\r\n";
@@ -284,6 +279,7 @@ class Shadowrocket
                 ];
                 if($server['is_obfs']) $params['obfs-password'] = $server['server_key'];
                 if($server['insecure']) $params['insecure'] = $server['insecure'];
+                if(isset($server['ports'])) $params['mport'] = $server['ports'];
                 $query = http_build_query($params);
                 $uri = "hysteria2://{$password}@{$server['host']}:{$server['port']}?{$query}#{$server['name']}";
                 $uri .= "\r\n";
